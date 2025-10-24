@@ -36,16 +36,18 @@ width, height = pyautogui.size() # Armazena resolução da tela
 
 cursor_x = 0 # Variavel x para filtro
 cursor_y = 0 # Variavel x para filtro
-smoothing = 0.4 # Variavel para suavizar movimento
+smoothing = 0.8 # Variavel para suavizar movimento
 
 last_click = 0 # Variavel para controle de multiplos cliques 
 mouse_down = False # Variavel para logica de modo de botão esquerdo pressionado
 
+xatual = 0 # X para filtro de tremida
+yatual = 0 # Y para filtro de tremida
+
 while True: # Loop principal 
     
     success, img = cap.read() # Leitura de um frame da camêra
-    
-    
+
     if not success: # Teste se a leitura funcionou
         
         print("Falha ao ler o frame da câmera.")
@@ -133,8 +135,14 @@ while True: # Loop principal
 
                     user32.mouse_event(0x0002, 0, 0, 0, 0) # 0x0002 é o evento de pressionar o botão esquerdo do mouse
 
-                    # pyautogui.mouseDown(button='left') # Função para pressionar o botão esquerdo
-                    mouse_down = True
+                if (xatual - ix)**2 + (yatual - iy)**2 > 50: # Filtra movimentos minusculos do cursor para evitar tremida
+
+                    xatual = cursor_x
+                    yatual = cursor_y
+                    user32.SetCursorPos(int(cursor_x), int(cursor_y)) # Move o mouse para a nova coordenada
+                    # pyautogui.moveTo(cursor_x, cursor_y) # Move o mouse para a nova coordenada
+
+                mouse_down = True
 
                 user32.SetCursorPos(int(cursor_x), int(cursor_y)) # Move o mouse para a nova coordenada
 
@@ -176,8 +184,12 @@ while True: # Loop principal
                     # pyautogui.doubleClick(button='left') # Clica duas vezes com o botão esquerdo onde o ponteiro está apontando
                     last_click = current_time # Atualiza o tempo para evitar multiplos duplos cliques
 
-                user32.SetCursorPos(int(cursor_x), int(cursor_y)) # Move o mouse para a nova coordenada
-                # pyautogui.moveTo(cursor_x, cursor_y) # Move o mouse para a nova coordenada
+                if (xatual - ix)**2 + (yatual - iy)**2 > 50: # Filtra movimentos minusculos do cursor para evitar tremida
+
+                    xatual = cursor_x
+                    yatual = cursor_y
+                    user32.SetCursorPos(int(cursor_x), int(cursor_y)) # Move o mouse para a nova coordenada
+                    # pyautogui.moveTo(cursor_x, cursor_y) # Move o mouse para a nova coordenada
 
     cur_time = time.time() # Current Time para calcular FPS
     fps = 1 / (cur_time - prev_time)
