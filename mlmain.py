@@ -15,45 +15,23 @@ with open('modelo_mouse.p', 'rb') as f: # Carrega o modelo treinado
 
     model = pickle.load(f)
 
-NOME_GESTOS = { # Mapeamento dos nomes dos gestos para exibir na tela
+def calcular_landmarks_relativos(image, landmarks):
+
+    width, height = image.shape[1], image.shape[0]
     
-    0: "Neutro",
-    1: "Scroll Cima",
-    2: "Scroll Baixo",
-    3: "Clique Esq.",
-    4: "Clique Dir.",
-    5: "Duplo Clique",
-    6: "Arrastar"
+    # 1. Converte os landmarks para array numpy (X, Y)
+    landmarks = np.array([[lm.x * width, lm.y * height] for lm in landmarks.landmark])
+    
+    # 2. Converte para relativo
+    base = landmarks[0]
+    landmarks = landmarks - base
 
-}
+    # 3. Normalização
+    max = np.max(np.abs(landmarks))
+    landmarks = landmarks / max
 
-def calcular_landmarks_relativos(image, landmarks): # Converte landmarks para o formato usado no treinamento 
-
-    image_width, image_height = image.shape[1], image.shape[0]
-    landmark_point = []
-
-    # Converte para pixels
-    for _, landmark in enumerate(landmarks.landmark):
-
-        landmark_x = min(int(landmark.x * image_width), image_width - 1)
-        landmark_y = min(int(landmark.y * image_height), image_height - 1)
-        landmark_point.append([landmark_x, landmark_y])
-
-    # Converte para relativo ao pulso
-    base_x, base_y = landmark_point[0][0], landmark_point[0][1]
-    temp_landmark_list = []
-
-    for index, point in enumerate(landmark_point):
-
-        temp_landmark_list.append([point[0] - base_x, point[1] - base_y])
-
-    # Achata a lista e normaliza
-    temp_landmark_list = list(itertools.chain.from_iterable(temp_landmark_list))
-    max_value = max(list(map(abs, temp_landmark_list)))
-    def normalize_(n): return n / max_value
-    temp_landmark_list = list(map(normalize_, temp_landmark_list))
-
-    return temp_landmark_list
+    # 4. Converte para uma lista simples 
+    return landmarks.flatten().tolist()
 
 cap = cv2.VideoCapture(0) # Cria objeto para captura de vídeo
 
